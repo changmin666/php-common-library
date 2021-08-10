@@ -1,0 +1,20 @@
+{
+    "name": "fzchangmin/php-common-library",
+    "description": "PHP 后端公共基础库",
+    "authors": [
+        {
+            "name": "fzchangmin",
+            "email": "fzchangmin@163.com",
+            "homepage": "https://github.com/changmin666/php-common-library"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "giggsey/libphonenumber-for-php": "^8.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "PXCommon\\": "src/"
+        }
+    }
+}
