@@ -49,25 +49,20 @@ class Marshaller
      */
     private function _marshal(object $obj): array
     {
-        try {
-            // 获取类名
-            $refClass = get_class($obj);
-            // 获取反射类
-            $ref = new ReflectionClass($refClass);
-            // 对象示例
-            $instance = $obj;
-            // 该对象属性
-            $properties = $ref->getProperties();
-            // 父类属性处理
-            $parentResult = $this->marshalParent($instance, $ref);
-            // 当前类处理
-            $result = $this->readPropertiesToArray($instance, $properties);
-            // merge result
-            $result = array_merge($parentResult, $result);
-        } catch (ReflectionException $e) {
-            throw $e;
-        }
-        return $result;
+        // 获取类名
+        $refClass = get_class($obj);
+        // 获取反射类
+        $ref = new ReflectionClass($refClass);
+        // 对象示例
+        $instance = $obj;
+        // 该对象属性
+        $properties = $ref->getProperties();
+        // 父类属性处理
+        $parentResult = $this->marshalParent($instance, $ref);
+        // 当前类处理
+        $result = $this->readPropertiesToArray($instance, $properties);
+        // merge result
+        return array_merge($parentResult, $result);
     }
 
     /**
@@ -79,27 +74,54 @@ class Marshaller
      */
     public function _unmarshal(array $row, string $refClass): object
     {
-        try {
-            $columns = [];
-            // 获取反射类
-            $ref = new ReflectionClass($refClass);
-            // 创建对象实例
-            $instance = $ref->newInstance();
-            // 读取所有类属性
-            $properties = $ref->getProperties();
-            foreach ($properties as $property) {
-                // 获取注解
-                $annotation = $this->getAnnotation($property->getDocComment() ?: '');
-                if ($annotation) {
-                    $columns[$annotation] = $property->getName();
-                }
+        $columns = [];
+        // 获取反射类
+        $ref = new ReflectionClass($refClass);
+        // 创建对象实例
+        $instance = $ref->newInstance();
+        // 读取所有类属性
+        $properties = $ref->getProperties();
+        foreach ($properties as $property) {
+            // 获取注解
+            $annotation = $this->getAnnotation($property->getDocComment() ?: '');
+            if ($annotation) {
+                $columns[$annotation] = $property->getName();
             }
-            // 读取数组所有元素
-            foreach ($row as $key => $value) {
-                $attributeName = $columns[$key] ?? false;
-                if ($attributeName) {
-                    // 获取属性
-                    $property = $ref->getProperty($attributeName);
+        }
+        // 读取数组所有元素
+        foreach ($row as $key => $value) {
+            $attributeName = $columns[$key] ?? false;
+            if ($attributeName) {
+                // 获取属性
+                $property = $ref->getProperty($attributeName);
+                $property->setAccessible(true);
+                // 自定义类型处理
+                if (!in_array($property->getType(), self::SINGLE_TYPE)) {
+                    // json string to array
+                    json_decode($value);
+                    if(json_last_error() == JSON_ERROR_NONE) {
+                        $value = json_decode($value,true);
+                    }
+                    $className = (string)$property->getType();
+                    $value = $this->_unmarshal($value, $className);
+                }
+                $property->setValue($instance, $value);
+            } else {
+                // 无匹配注解，获取类属性，小写驼峰命名
+                $property = null;
+                try {
+                    if (is_string($key)) {
+                        $property = $ref->getProperty(StringUtil::toCamelize($key));
+                    }
+                } catch (ReflectionException $e) {
+                    $property = null;
+                }
+                if ($property) {
+                    $annotation = $this->getAnnotation($property->getDocComment() ?: '');
+                    // 排除跳过反序列化
+                    if (!empty($annotation) && $annotation == '-') {
+                        continue;
+                    }
                     $property->setAccessible(true);
                     // 自定义类型处理
                     if (!in_array($property->getType(), self::SINGLE_TYPE)) {
@@ -109,44 +131,13 @@ class Marshaller
                             $value = json_decode($value,true);
                         }
                         $className = (string)$property->getType();
-                        $value = $this->_unmarshal($value, $className);
+                        $value = self::unmarshal($value, $className);
                     }
                     $property->setValue($instance, $value);
-                } else {
-                    // 无匹配注解，获取类属性，小写驼峰命名
-                    $property = null;
-                    try {
-                        if (is_string($key)) {
-                            $property = $ref->getProperty(StringUtil::toCamelize($key));
-                        }
-                    } catch (ReflectionException $e) {
-                        $property = null;
-                    }
-                    if ($property) {
-                        $annotation = $this->getAnnotation($property->getDocComment() ?: '');
-                        // 排除跳过反序列化
-                        if (!empty($annotation) && $annotation == '-') {
-                            continue;
-                        }
-                        $property->setAccessible(true);
-                        // 自定义类型处理
-                        if (!in_array($property->getType(), self::SINGLE_TYPE)) {
-                            // json string to array
-                            json_decode($value);
-                            if(json_last_error() == JSON_ERROR_NONE) {
-                                $value = json_decode($value,true);
-                            }
-                            $className = (string)$property->getType();
-                            $value = self::unmarshal($value, $className);
-                        }
-                        $property->setValue($instance, $value);
-                    }
                 }
             }
-            return $instance;
-        } catch (ReflectionException $e) {
-            throw $e;
         }
+        return $instance;
     }
 
     /**
