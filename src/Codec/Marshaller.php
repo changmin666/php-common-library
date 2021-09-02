@@ -103,6 +103,11 @@ class Marshaller
                     $property->setAccessible(true);
                     // 自定义类型处理
                     if (!in_array($property->getType(), self::SINGLE_TYPE)) {
+                        // json string to array
+                        json_decode($value);
+                        if(json_last_error() == JSON_ERROR_NONE) {
+                            $value = json_decode($value,true);
+                        }
                         $className = (string)$property->getType();
                         $value = $this->_unmarshal($value, $className);
                     }
