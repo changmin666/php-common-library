@@ -98,12 +98,14 @@ class Marshaller
                 // 自定义类型处理
                 if (!in_array($property->getType(), self::SINGLE_TYPE)) {
                     // json string to array
-                    json_decode($value);
-                    if(json_last_error() == JSON_ERROR_NONE) {
-                        $value = json_decode($value,true);
+                    if (is_string($value)) {
+                        json_decode($value);
+                        if (json_last_error() == JSON_ERROR_NONE) {
+                            $value = json_decode($value, true);
+                        }
                     }
                     $className = (string)$property->getType();
-                    $value = $this->_unmarshal($value, $className);
+                    $value = self::unmarshal($value, $className);
                 }
                 $property->setValue($instance, $value);
             } else {
@@ -126,9 +128,11 @@ class Marshaller
                     // 自定义类型处理
                     if (!in_array($property->getType(), self::SINGLE_TYPE)) {
                         // json string to array
-                        json_decode($value);
-                        if(json_last_error() == JSON_ERROR_NONE) {
-                            $value = json_decode($value,true);
+                        if (is_string($value)) {
+                            json_decode($value);
+                            if (json_last_error() == JSON_ERROR_NONE) {
+                                $value = json_decode($value, true);
+                            }
                         }
                         $className = (string)$property->getType();
                         $value = self::unmarshal($value, $className);
