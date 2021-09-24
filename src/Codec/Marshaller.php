@@ -190,13 +190,17 @@ class Marshaller
                     if ($property->getType() == 'array') {
                         // 数组类型处理
                         $array = $property->getValue($instance);
-                        foreach ($array as $k => $v) {
-                            if (!in_array(gettype($v), self::SINGLE_TYPE)) {
-                                // 数组内元素为自定义类型
-                                $value = $this->_marshal($v);
-                                $result[$annotation][$k] = $value;
-                            } else {
-                                $result[$annotation][$k] = $v;
+                        if (count($array) == 0) {
+                            $result[$annotation] = [];
+                        } else {
+                            foreach ($array as $k => $v) {
+                                if (!in_array(gettype($v), self::SINGLE_TYPE)) {
+                                    // 数组内元素为自定义类型
+                                    $value = $this->_marshal($v);
+                                    $result[$annotation][$k] = $value;
+                                } else {
+                                    $result[$annotation][$k] = $v;
+                                }
                             }
                         }
                     } else {
@@ -219,12 +223,16 @@ class Marshaller
                     if ($property->getType() == 'array') {
                         // 数组类型处理
                         $array = $property->getValue($instance);
-                        foreach ($array as $k => $v) {
-                            if (!in_array(gettype($v), self::SINGLE_TYPE)) {
-                                $value = $this->_marshal($v);
-                                $result[$annotation][$k] = $value;
-                            } else {
-                                $result[$annotation][$k] = $v;
+                        if (count($array) == 0) {
+                            $result[$annotation] = [];
+                        } else {
+                            foreach ($array as $k => $v) {
+                                if (!in_array(gettype($v), self::SINGLE_TYPE)) {
+                                    $value = $this->_marshal($v);
+                                    $result[$annotation][$k] = $value;
+                                } else {
+                                    $result[$annotation][$k] = $v;
+                                }
                             }
                         }
                     } else {
