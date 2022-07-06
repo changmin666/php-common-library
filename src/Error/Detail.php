@@ -9,7 +9,7 @@ class Detail
     private string $domain = '';
     private array $metadata = [];
 
-    public function __construct(string $reason, string $domain = '', array $metadata)
+    public function __construct(string $reason, string $domain, array $metadata)
     {
         $this->reason = $reason;
         $this->domain = $domain;
