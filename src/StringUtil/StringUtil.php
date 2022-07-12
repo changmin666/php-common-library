@@ -46,7 +46,7 @@ class StringUtil
      * @param string $defaultRegion
      * @return bool
      */
-    public static function checkPhoneNumber(string $str, string $defaultRegion = 'CN'): bool
+    public static function checkPhoneNumber(string $str, string $defaultRegion): bool
     {
         $phoneUtil = PhoneNumberUtil::getInstance();
         try {
