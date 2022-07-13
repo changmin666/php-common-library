@@ -68,8 +68,12 @@ class StringUtil
      */
     private static function remPhoneSensitive(string $str): ?string
     {
-        if (self::checkPhoneNumber($str)) {
-            return preg_replace('/(\d{3})\d{4}(\d{4})/', '$1****$2', $str);
+        if (self::checkPhoneNumber($str, '')) {
+            if (str_starts_with($str, '+')) {
+                return self::desensitize($str,4,4,'*');
+            } else {
+                return preg_replace('/(\d{3})\d{4}(\d{4})/', '$1****$2', $str);
+            }
         }
         return $str;
     }
@@ -93,5 +97,27 @@ class StringUtil
     public static function toUnCamelize(string $camelCaps, string $separator = '_'): string
     {
         return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
+    }
+
+    /**
+     * @param string $string
+     * @param int $start
+     * @param int $length
+     * @param string $re
+     * @return string
+     */
+    private static function desensitize(string $string, int $start, int $length, string $re): string
+    {
+        if (!$string || !$length || !$re) return $string;
+        $end = $start + $length;
+        $strLength = mb_strlen($string);
+        $str_arr = array();
+        for ($i = 0; $i < $strLength; $i++) {
+            if ($i >= $start && $i < $end)
+                $str_arr[] = $re;
+            else
+                $str_arr[] = mb_substr($string, $i, 1);
+        }
+        return implode('', $str_arr);
     }
 }
