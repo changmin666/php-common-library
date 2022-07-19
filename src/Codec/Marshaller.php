@@ -106,6 +106,11 @@ class Marshaller
                     }
                     $className = (string)$property->getType();
                     $value = self::unmarshal($value, $className);
+                }else if($property->getType() == 'string') {
+                    // string is null process
+                    if (!$value) {
+                        $value = '';
+                    }
                 }
                 $property->setValue($instance, $value);
             } else {
@@ -136,6 +141,11 @@ class Marshaller
                         }
                         $className = (string)$property->getType();
                         $value = self::unmarshal($value, $className);
+                    }else if($property->getType() == 'string') {
+                        // string is null process
+                        if (!$value) {
+                            $value = '';
+                        }
                     }
                     $property->setValue($instance, $value);
                 }
